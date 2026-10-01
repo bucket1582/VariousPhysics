@@ -6,7 +6,7 @@ from Basics.statistics import *
 
 # Constants
 GRAVITY = 500
-DAMP = 5
+DAMP = 4
 FPS = 1000
 PHYSICS_FPS = 1000
 
@@ -21,51 +21,39 @@ pen = t.Turtle()
 pen.ht()
 pen.color("black")
 
+def dynamics(moving_position: MovingPosition):
+    moving_position.ay = -GRAVITY - DAMP * moving_position.vy
+
+character.add_pre_behavior(dynamics)
+
 def render():
     pen.clear()
     pen.pu()
-    pen.goto(character.x, character.y)
+    
+    # property를 활용하여 값 가져오기
+    render_x, render_y = character.position
+    
+    pen.goto(render_x, render_y)
     pen.pd()
     pen.dot(10)
     screen.update()
 
-def phsyics_update(delta: float):
-    character.ay = -GRAVITY - DAMP * character.vy
-    character.update(delta)
-
-
 if __name__ == "__main__":
-    old_physics_time = time.time()
-    old_render_time = old_physics_time
+    # 1. 물리 엔진 초기 세팅 및 가동
+    physics = PhysicsThread.thread()
+    physics.set_fps(PHYSICS_FPS)
+    physics.simulate()
     
-    # print 출력을 1초에 한 번만 하도록 타이머를 추가합니다.
-    last_print_time = time.time()
+    old_render_time = time()
+    last_print_time = time()
     
+    # 2. 메인 스레드는 렌더링만 전담
     while True:
         try:
-            curr_time = time.time()
-            
-            # 1. 물리 업데이트 (초당 1000번 목표)
-            if curr_time > old_physics_time + 1 / PHYSICS_FPS:
-                delta = curr_time - old_physics_time
-                statistics.add_physics_frame_stat(1 / delta)
-                phsyics_update(delta)
-                old_physics_time = curr_time
-                
-            # 2. 렌더링 업데이트 (초당 60번 목표)
+            curr_time = time()
             if curr_time > old_render_time + 1 / FPS:
-                delta = curr_time - old_render_time
-                statistics.add_render_frame_stat(1 / delta)
                 render()
                 old_render_time = curr_time
                 
-            # 3. 콘솔 출력은 별도로 1초(또는 0.5초)에 한 번만 실행하여 I/O 병목을 없앱니다.
-            if curr_time > last_print_time + 1.0:
-                print(statistics)
-                last_print_time = curr_time
-                
-        except t.Terminator: # 창이 닫혔을 때 우아하게 종료
-            break
-        except Exception as e:
-            print(f"Error: {e}")
+        except t.Terminator:
             break
