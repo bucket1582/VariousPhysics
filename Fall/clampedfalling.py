@@ -11,7 +11,7 @@ FPS = 1000
 PHYSICS_FPS = 1000
 
 statistics = FrameStatistics()
-character = MovingPosition(0, 100, 0, 0, 0, 0)
+character = MovingPosition(0, 100, 0, 0, 0, -GRAVITY)
 screen = t.Screen()
 screen.setworldcoordinates(-200, -200, 200, 200)
 screen.setup(500, 500)
@@ -30,8 +30,7 @@ def render():
     screen.update()
 
 def phsyics_update(delta: float):
-    character.ay = -GRAVITY if abs(character.vy) < CLAMP else 0
-    character.update(delta)
+    character.update(delta, clamp_vy=CLAMP)
 
 
 if __name__ == "__main__":
