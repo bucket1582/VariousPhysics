@@ -88,6 +88,12 @@ class MovingPosition:
             elif new_vy < -self.clamp_vy: 
                 new_vy = -self.clamp_vy
 
+        # Zeroing
+        if abs(new_vx) < 1e-6:
+            new_vx = 0
+        if abs(new_vy) < 1e-6:
+            new_vy = 0
+
         self.x += ((old_vx + new_vx) / 2) * delta
         self.y += ((old_vy + new_vy) / 2) * delta
 
@@ -100,3 +106,12 @@ class MovingPosition:
     @property
     def position(self):
         return (self.x, self.y)
+
+
+@dataclass
+class RoundRigidBody(MovingPosition):
+    radius: float = 5
+
+    def __post_init__(self):
+        super().__post_init__()
+

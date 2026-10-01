@@ -6,9 +6,10 @@ from Basics.statistics import *
 
 # Constants
 GRAVITY = 500
-CLAMP = 150
+CLAMP = 200
 FPS = 1000
 PHYSICS_FPS = 1000
+ELASTICITY = 0.8
 
 statistics = FrameStatistics()
 character = MovingPosition(0, 100, 0, 0, 0, -GRAVITY, -1, CLAMP)
@@ -20,6 +21,23 @@ screen.tracer(0, 0)
 pen = t.Turtle()
 pen.ht()
 pen.color("black")
+
+env_pen = t.Turtle()
+env_pen.ht()
+env_pen.color("black")
+
+env_pen.pu()
+env_pen.goto(-100, -102.5)
+env_pen.pd()
+env_pen.goto(100, -102.5)
+env_pen.pu()
+
+def ground_dynamics(moving_position: MovingPosition):
+    if moving_position.y < -100:
+        moving_position.y = -100
+        moving_position.vy = ELASTICITY * (-moving_position.vy)
+
+character.add_post_behavior(ground_dynamics)
 
 def render():
     pen.clear()
