@@ -41,7 +41,7 @@ class PhysicsThread:
                 sleep(0.001)
 
 @dataclass
-class MovingPosition:
+class MovingPoint:
     x: float
     y: float
     # 기본값이 없는 변수들을 위로 배치
@@ -53,17 +53,17 @@ class MovingPosition:
     clamp_vx: float = -1
     clamp_vy: float = -1
 
-    pre_behaviors: list[Callable[['MovingPosition'], None]] = field(default_factory=list)
-    post_behaviors: list[Callable[['MovingPosition'], None]] = field(default_factory=list)
+    pre_behaviors: list[Callable[['MovingPoint'], None]] = field(default_factory=list)
+    post_behaviors: list[Callable[['MovingPoint'], None]] = field(default_factory=list)
 
     def __post_init__(self):
         # 객체가 생성되자마자 알아서 물리 스레드에 자신을 등록 (아주 훌륭한 패턴입니다)
         PhysicsThread.thread().on_physics_frame(self.update)
 
-    def add_pre_behavior(self, behavior: Callable[['MovingPosition'], None]):
+    def add_pre_behavior(self, behavior: Callable[['MovingPoint'], None]):
         self.pre_behaviors.append(behavior)
 
-    def add_post_behavior(self, behavior: Callable[['MovingPosition'], None]):
+    def add_post_behavior(self, behavior: Callable[['MovingPoint'], None]):
             self.post_behaviors.append(behavior)
 
     def update(self, delta: float):
@@ -109,7 +109,7 @@ class MovingPosition:
 
 
 @dataclass
-class RoundRigidBody(MovingPosition):
+class RoundRigidBody(MovingPoint):
     radius: float = 5
 
     def __post_init__(self):

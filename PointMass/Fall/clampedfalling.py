@@ -6,13 +6,13 @@ from Basics.statistics import *
 
 # Constants
 GRAVITY = 500
-DAMP = 2
+CLAMP = 200
 FPS = 1000
 PHYSICS_FPS = 1000
 ELASTICITY = 0.8
 
 statistics = FrameStatistics()
-character = MovingPosition(0, 100, 0, 0, 0, 0)
+character = MovingPoint(0, 100, 0, 0, 0, -GRAVITY, -1, CLAMP)
 screen = t.Screen()
 screen.setworldcoordinates(-200, -200, 200, 200)
 screen.setup(500, 500)
@@ -32,15 +32,11 @@ env_pen.pd()
 env_pen.goto(100, -102.5)
 env_pen.pu()
 
-def falling_dynamics(moving_position: MovingPosition):
-    moving_position.ay = -GRAVITY - DAMP * moving_position.vy
-
-def ground_dynamics(moving_position: MovingPosition):
+def ground_dynamics(moving_position: MovingPoint):
     if moving_position.y < -100:
         moving_position.y = -100
         moving_position.vy = ELASTICITY * (-moving_position.vy)
 
-character.add_pre_behavior(falling_dynamics)
 character.add_post_behavior(ground_dynamics)
 
 def render():
