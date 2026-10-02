@@ -17,7 +17,6 @@ class PhysicsThread:
             cls.singleton = PhysicsThread()
         return cls.singleton
 
-    # 클래스 메서드가 아닌 인스턴스 메서드로 관리하는 것이 싱글톤 패턴에 적합합니다.
     def set_fps(self, fps: int):
         self.frame_interval = 1 / fps
 
@@ -32,7 +31,6 @@ class PhysicsThread:
         while True:
             curr_time = time()
             delta = curr_time - old_time
-            # 역수를 두 번 취하는 버그 수정
             if delta >= self.frame_interval:
                 for func in self.subscribers:
                     func(delta)
