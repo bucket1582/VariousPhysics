@@ -1,7 +1,7 @@
 import turtle as t
 from time import time
 
-from Basics.dynamics import *
+from Basics.kinematics import *
 from Basics.statistics import *
 
 # Constants
