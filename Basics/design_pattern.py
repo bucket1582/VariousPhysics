@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import Self, Optional
+
 from time import perf_counter, sleep
 import threading
 
@@ -39,3 +41,12 @@ class HasTimedLoop(ABC):
                 sleep(0.001)
             else:
                 sleep(0)
+
+class Singleton(ABC):
+    singleton: Optional[Self] = None
+
+    @classmethod
+    def instance(cls) -> Self:
+        if cls.singleton is None:
+            cls.singleton = cls()
+        return cls.singleton

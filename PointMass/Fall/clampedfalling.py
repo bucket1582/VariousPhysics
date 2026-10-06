@@ -2,7 +2,10 @@ import turtle as t
 from time import time
 
 from Basics.kinematics import *
+from Basics.renderer import *
 from Basics.statistics import *
+
+from PointMass.moving_point import MovingPoint
 
 # Constants
 GRAVITY = 500
@@ -54,18 +57,6 @@ def render():
 if __name__ == "__main__":
     # 1. 물리 엔진 초기 세팅 및 가동
     setup_kinematics(PHYSICS_FPS)
+    setup_renderer(FPS, pen, env_pen, screen)
     begin_simulation()
-    
-    old_render_time = time()
-    last_print_time = time()
-    
-    # 2. 메인 스레드는 렌더링만 전담
-    while True:
-        try:
-            curr_time = time()
-            if curr_time > old_render_time + 1 / FPS:
-                render()
-                old_render_time = curr_time
-                
-        except t.Terminator:
-            break
+    begin_render()

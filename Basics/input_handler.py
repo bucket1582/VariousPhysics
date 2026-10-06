@@ -1,6 +1,6 @@
 from turtle import _Screen, Screen
 from typing import Callable, Literal
-from time import perf_counter, sleep
+from time import perf_counter
 
 from Basics.design_pattern import *
 
