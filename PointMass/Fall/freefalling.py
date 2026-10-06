@@ -5,6 +5,8 @@ from Basics.kinematics import *
 from Basics.renderer import setup_renderer, begin_render
 from Basics.statistics import *
 
+from PointMass.moving_point import MovingPoint
+
 # Constants
 GRAVITY = 500
 FPS = 1000
