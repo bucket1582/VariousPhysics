@@ -11,7 +11,7 @@ class HasTimedLoop(ABC):
         pass
 
     @abstractmethod
-    def _loop_action(self, old_time: float, curr_time: float, delta: float) -> None:
+    def _loop_action(self, curr_time: float, delta: float) -> None:
         pass
 
     def begin_loop_thread(self) -> threading.Thread:
@@ -33,7 +33,7 @@ class HasTimedLoop(ABC):
             accumulator += frame_time
 
             while accumulator >= self.frame_interval:
-                self._loop_action(old_time, curr_time, self.frame_interval)
+                self._loop_action(curr_time, self.frame_interval)
                 accumulator -= self.frame_interval
 
             time_left = self.frame_interval - accumulator

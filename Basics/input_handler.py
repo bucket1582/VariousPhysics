@@ -1,8 +1,17 @@
 from turtle import _Screen, Screen
-from typing import Callable, Literal
+from typing import Callable, Literal, Union
 from time import perf_counter
+from dataclasses import dataclass
 
 from Basics.design_pattern import *
+
+@dataclass
+class KeyboardInputEvent:
+    event_time: float
+
+@dataclass
+class KeyboardHoldEvent(KeyboardInputEvent):
+    duration: float
 
 class KeyboardInputHandler(HasTimedLoop):
     RELEASE_DELAY: float = 0.015
@@ -11,15 +20,17 @@ class KeyboardInputHandler(HasTimedLoop):
     def __init__(self, screen: _Screen):
         self.screen: _Screen = screen
         self.key_status: dict[str, bool] = dict()
-        self.key_press_events: dict[str, set[Callable[[], None]]] = dict() 
-        self.key_release_events: dict[str, set[Callable[[], None]]] = dict()
-        self.key_hold_events: dict[str, set[Callable[[], None]]] = dict() 
+        self.key_press_events: dict[str, set[Callable[[KeyboardInputEvent], None]]] = dict() 
+        self.key_release_events: dict[str, set[Callable[[KeyboardHoldEvent], None]]] = dict()
+        self.key_hold_events: dict[str, set[Callable[[KeyboardInputEvent], None]]] = dict() 
         self.listen = False
         self._frame_interval = 1 / 240
         
         self._pending_releases: dict[str, float] = dict()
         self._press_start_time: dict[str, float] = dict()
         self._lock = threading.Lock()
+
+        self.base_time = 0.0
 
     @property
     def frame_interval(self):
@@ -41,7 +52,7 @@ class KeyboardInputHandler(HasTimedLoop):
             
         if not self.listen: return
         for func in self.key_press_events.get(key, set()):
-            func()
+            func(KeyboardInputEvent(perf_counter() - self.base_time))
 
     def _on_key_release(self, key: str):
         curr_time = perf_counter()
@@ -66,9 +77,9 @@ class KeyboardInputHandler(HasTimedLoop):
             self.key_status[key] = False
         if not self.listen: return
         for func in self.key_release_events.get(key, set()):
-            func()
+            func(KeyboardInputEvent(perf_counter() - self.base_time))
 
-    def bind(self, key: str, status: Literal["PRESS", "HOLD", "RELEASE"], func: Callable[[], None]):
+    def bind(self, key: str, status: Literal["PRESS", "HOLD", "RELEASE"], func: Union[Callable[[], None], Callable[[KeyboardInputEvent], None]]):
             if key not in self.key_status:
                 self.key_status[key] = False
                 self.screen.onkeypress(lambda: self._on_key_press(key), key)
@@ -90,7 +101,7 @@ class KeyboardInputHandler(HasTimedLoop):
                 case _:
                     raise ValueError(f"status는 PRESS, HOLD, RELEASE 중 하나여야 합니다 - 받은 값: {status}")
     
-    def unbind(self, key: str, status: Literal["PRESS", "HOLD", "RELEASE"], func: Callable[[], None]):
+    def unbind(self, key: str, status: Literal["PRESS", "HOLD", "RELEASE"], func: Union[Callable[[], None], Callable[[KeyboardInputEvent], None]]):
         match status:
             case "PRESS":
                 self.key_press_events[key].remove(func)
@@ -103,10 +114,11 @@ class KeyboardInputHandler(HasTimedLoop):
 
     def start_listen(self):
         self.listen = True
+        self.base_time = perf_counter()
         self.screen.listen() # Tkinter 키보드 포커스 획득 (이게 없으면 이벤트가 영원히 안 먹힘)
         self.begin_loop_thread()
         
-    def _loop_action(self, old_time, curr_time, delta):
+    def _loop_action(self, curr_time, delta):
         # 떼는 키 대기열 처리
         keys_to_release = []
         with self._lock:
@@ -129,14 +141,14 @@ class KeyboardInputHandler(HasTimedLoop):
         
         for key in active_holds:
             for func in self.key_hold_events[key]:
-                func()
+                func(KeyboardHoldEvent(curr_time, curr_time - self._press_start_time[key]))
 
 
 if __name__=="__main__":
     screen = Screen()
     input_handler = KeyboardInputHandler(screen)
-    input_handler.bind("a", "PRESS", lambda: print("Pressing A"))
-    input_handler.bind("a", "HOLD", lambda: print("Holding A"))
-    input_handler.bind("a", "RELEASE", lambda: print("Releasing A"))
+    input_handler.bind("a", "PRESS", lambda ev: print(f"Pressed A at {ev.event_time}"))
+    input_handler.bind("a", "HOLD", lambda ev: print(f"Holding A for {ev.duration}"))
+    input_handler.bind("a", "RELEASE", lambda ev: print(f"Releasing A at {ev.event_time}"))
     input_handler.start_listen()
     screen.exitonclick()

@@ -19,7 +19,7 @@ class PhysicsThread(HasTimedLoop, Singleton):
     def on_physics_frame(self, func: Callable[[float], None]):
         self.subscribers.append(func)
 
-    def _loop_action(self, old_time, curr_time, delta):
+    def _loop_action(self, curr_time, delta):
         for func in self.subscribers:
             func(delta)
 

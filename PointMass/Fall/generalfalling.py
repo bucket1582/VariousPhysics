@@ -1,5 +1,4 @@
 import turtle as t
-from time import time
 
 from Basics.kinematics import *
 from Basics.renderer import setup_renderer, begin_render
@@ -38,6 +37,12 @@ def preset() -> tuple[MovingPoint, t.Turtle, t.Turtle, t._Screen]:
     env_pen.pu()
     return character, pen, env_pen, screen
 
+def set_parameters(gravity: float=500, damp: float=2, elasticity: float=0.8):
+    global GRAVITY, DAMP, ELASTICITY
+    GRAVITY = gravity
+    DAMP = damp
+    ELASTICITY = elasticity
+
 def falling_dynamics(moving_position: MovingPoint):
     moving_position.ay = -GRAVITY - DAMP * moving_position.vy
 
@@ -46,7 +51,7 @@ def ground_dynamics(moving_position: MovingPoint):
         moving_position.y = -100
         moving_position.vy = ELASTICITY * (-moving_position.vy)
 
-def setup(character: MovingPoint):
+def falling_setup(character: MovingPoint):
     character.add_pre_behavior(falling_dynamics)
     character.add_post_behavior(ground_dynamics)
 
@@ -67,7 +72,7 @@ if __name__ == "__main__":
     setup_kinematics(PHYSICS_FPS)
 
     character, pen, env_pen, screen = preset()
-    setup(character)
+    falling_setup(character)
     setup_renderer(FPS, pen, env_pen, screen)
     begin_simulation()
     begin_render()
