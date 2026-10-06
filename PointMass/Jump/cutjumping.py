@@ -9,6 +9,7 @@ from PointMass.Fall.generalfalling import *
 
 HORIZONTAL_SPEED = 100
 VERTICAL_SPEED_MAX = 100
+VERTICAL_SPEED_MIN = 20
 MAX_HOLD = 0.5
 
 # Bad practice but...
@@ -21,8 +22,8 @@ def horinzontal_loop_dynamics(moving_position: MovingPoint):
         moving_position.x = -100 + delta
 
     if moving_position.x < -100:
-        delta = moving_position.x + 100
-        moving_position.x = 100 + delta
+            delta = moving_position.x + 100
+            moving_position.x = 100 + delta
 
 def naive_jump_press(event: KeyPressEvent, moving_position: MovingPoint):
     global started_jump
@@ -31,11 +32,17 @@ def naive_jump_press(event: KeyPressEvent, moving_position: MovingPoint):
         started_jump = True
 
 def naive_jump(event: KeyHoldEvent, moving_position: MovingPoint):
+    global started_jump
     if event.duration < MAX_HOLD and started_jump:
         moving_position.vy = VERTICAL_SPEED_MAX
+    elif started_jump:
+        started_jump = False
+        moving_position.vy = VERTICAL_SPEED_MIN
 
-def naive_jump_release(event: KeyReleaseEvent):
+def naive_jump_release(event: KeyReleaseEvent, moving_position: MovingPoint):
     global started_jump
+    if started_jump:
+        moving_position.vy = VERTICAL_SPEED_MIN
     started_jump = False
 
 def naive_right_press(event: KeyPressEvent):
@@ -83,7 +90,7 @@ if __name__ == "__main__":
     key_handler.bind("a", "RELEASE", lambda ev: naive_left_release(ev, character))
     key_handler.bind("space", "PRESS", lambda ev: naive_jump_press(ev, character))
     key_handler.bind("space", "HOLD", lambda ev: naive_jump(ev, character))
-    key_handler.bind("space", "RELEASE", lambda ev: naive_jump_release(ev))
+    key_handler.bind("space", "RELEASE", lambda ev: naive_jump_release(ev, character))
     key_handler.start_listen()
 
     setup_renderer(FPS, pen, env_pen, screen)
