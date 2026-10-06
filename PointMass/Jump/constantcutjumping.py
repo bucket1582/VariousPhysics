@@ -25,13 +25,13 @@ def horinzontal_loop_dynamics(moving_position: MovingPoint):
             delta = moving_position.x + 100
             moving_position.x = 100 + delta
 
-def naive_jump_press(event: KeyPressEvent, moving_position: MovingPoint):
+def cut_jump_press(event: KeyPressEvent, moving_position: MovingPoint):
     global started_jump
     if abs(moving_position.y + 100) < 1e-2:
         moving_position.vy = VERTICAL_SPEED_MAX
         started_jump = True
 
-def naive_jump(event: KeyHoldEvent, moving_position: MovingPoint):
+def cut_jump(event: KeyHoldEvent, moving_position: MovingPoint):
     global started_jump
     if event.duration < MAX_HOLD and started_jump:
         moving_position.vy = VERTICAL_SPEED_MAX
@@ -39,7 +39,7 @@ def naive_jump(event: KeyHoldEvent, moving_position: MovingPoint):
         started_jump = False
         moving_position.vy = VERTICAL_SPEED_MIN
 
-def naive_jump_release(event: KeyReleaseEvent, moving_position: MovingPoint):
+def cut_jump_release(event: KeyReleaseEvent, moving_position: MovingPoint):
     global started_jump
     if started_jump:
         moving_position.vy = VERTICAL_SPEED_MIN
@@ -88,9 +88,9 @@ if __name__ == "__main__":
     key_handler.bind("a", "PRESS", lambda ev: naive_left_press(ev))
     key_handler.bind("a", "HOLD", lambda ev: naive_left_hold(ev, character))
     key_handler.bind("a", "RELEASE", lambda ev: naive_left_release(ev, character))
-    key_handler.bind("space", "PRESS", lambda ev: naive_jump_press(ev, character))
-    key_handler.bind("space", "HOLD", lambda ev: naive_jump(ev, character))
-    key_handler.bind("space", "RELEASE", lambda ev: naive_jump_release(ev, character))
+    key_handler.bind("space", "PRESS", lambda ev: cut_jump_press(ev, character))
+    key_handler.bind("space", "HOLD", lambda ev: cut_jump(ev, character))
+    key_handler.bind("space", "RELEASE", lambda ev: cut_jump_release(ev, character))
     key_handler.start_listen()
 
     setup_renderer(FPS, pen, env_pen, screen)
