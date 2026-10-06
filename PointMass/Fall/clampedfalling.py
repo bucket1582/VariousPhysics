@@ -1,5 +1,5 @@
 import turtle as t
-import time
+from time import time
 
 from Basics.kinematics import *
 from Basics.statistics import *
@@ -53,9 +53,8 @@ def render():
 
 if __name__ == "__main__":
     # 1. 물리 엔진 초기 세팅 및 가동
-    physics = PhysicsThread.thread()
-    physics.set_fps(PHYSICS_FPS)
-    physics.simulate()
+    setup_kinematics(PHYSICS_FPS)
+    begin_simulation()
     
     old_render_time = time()
     last_print_time = time()

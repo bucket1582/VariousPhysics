@@ -1,15 +1,15 @@
 from dataclasses import dataclass, field
 from typing import Self, Optional, Callable
-from time import time, sleep
-import threading
 
-class PhysicsThread:
+from Basics.design_pattern import *
+
+class PhysicsThread(HasTimedLoop):
     singleton: Optional[Self] = None
     
     def __init__(self):
         # 인스턴스 생성 시 구독자 리스트 초기화
         self.subscribers: list[Callable[[float], None]] = []
-        self.frame_interval: float = 1 / 240 # 기본값
+        self._frame_interval: float = 1 / 240 # 기본값
 
     @classmethod
     def thread(cls) -> Self:
@@ -17,26 +17,19 @@ class PhysicsThread:
             cls.singleton = PhysicsThread()
         return cls.singleton
 
-    def set_fps(self, fps: int):
-        self.frame_interval = 1 / fps
+    @property
+    def frame_interval(self):
+        return self._frame_interval
 
-    def simulate(self):
-        threading.Thread(target=self._simulate, daemon=True).start()
+    def set_fps(self, fps: int):
+        self._frame_interval = 1 / fps
 
     def on_physics_frame(self, func: Callable[[float], None]):
         self.subscribers.append(func)
 
-    def _simulate(self):
-        old_time = time()
-        while True:
-            curr_time = time()
-            delta = curr_time - old_time
-            if delta >= self.frame_interval:
-                for func in self.subscribers:
-                    func(delta)
-                old_time = curr_time
-            else:
-                sleep(0.001)
+    def _loop_action(self, old_time, curr_time, delta):
+        for func in self.subscribers:
+            func(delta)
 
 @dataclass
 class MovingPoint:
@@ -113,3 +106,11 @@ class RoundRigidBody(MovingPoint):
     def __post_init__(self):
         super().__post_init__()
 
+
+def setup_kinematics(fps: int) -> tuple['PhysicsThread']:
+    physics = PhysicsThread.thread()
+    physics.set_fps(fps)
+    return physics
+
+def begin_simulation() -> None:
+    PhysicsThread.thread().begin_loop_thread()
