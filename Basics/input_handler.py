@@ -10,7 +10,15 @@ class KeyboardInputEvent:
     event_time: float
 
 @dataclass
-class KeyboardHoldEvent(KeyboardInputEvent):
+class KeyPressEvent(KeyboardInputEvent):
+    pass
+
+@dataclass
+class KeyReleaseEvent(KeyboardInputEvent):
+    duration: float
+
+@dataclass
+class KeyHoldEvent(KeyboardInputEvent):
     duration: float
 
 class KeyboardInputHandler(HasTimedLoop):
@@ -20,9 +28,9 @@ class KeyboardInputHandler(HasTimedLoop):
     def __init__(self, screen: _Screen):
         self.screen: _Screen = screen
         self.key_status: dict[str, bool] = dict()
-        self.key_press_events: dict[str, set[Callable[[KeyboardInputEvent], None]]] = dict() 
-        self.key_release_events: dict[str, set[Callable[[KeyboardHoldEvent], None]]] = dict()
-        self.key_hold_events: dict[str, set[Callable[[KeyboardInputEvent], None]]] = dict() 
+        self.key_press_events: dict[str, set[Callable[[KeyPressEvent], None]]] = dict() 
+        self.key_release_events: dict[str, set[Callable[[KeyReleaseEvent], None]]] = dict()
+        self.key_hold_events: dict[str, set[Callable[[KeyHoldEvent], None]]] = dict() 
         self.listen = False
         self._frame_interval = 1 / 240
         
@@ -52,7 +60,7 @@ class KeyboardInputHandler(HasTimedLoop):
             
         if not self.listen: return
         for func in self.key_press_events.get(key, set()):
-            func(KeyboardInputEvent(perf_counter() - self.base_time))
+            func(KeyPressEvent(perf_counter() - self.base_time))
 
     def _on_key_release(self, key: str):
         curr_time = perf_counter()
@@ -76,8 +84,9 @@ class KeyboardInputHandler(HasTimedLoop):
         with self._lock:
             self.key_status[key] = False
         if not self.listen: return
+        curr_time = perf_counter()
         for func in self.key_release_events.get(key, set()):
-            func(KeyboardInputEvent(perf_counter() - self.base_time))
+            func(KeyReleaseEvent(curr_time - self.base_time, curr_time - self._press_start_time[key]))
 
     def bind(self, key: str, status: Literal["PRESS", "HOLD", "RELEASE"], func: Union[Callable[[], None], Callable[[KeyboardInputEvent], None]]):
             if key not in self.key_status:
@@ -141,7 +150,7 @@ class KeyboardInputHandler(HasTimedLoop):
         
         for key in active_holds:
             for func in self.key_hold_events[key]:
-                func(KeyboardHoldEvent(curr_time, curr_time - self._press_start_time[key]))
+                func(KeyHoldEvent(curr_time, curr_time - self._press_start_time[key]))
 
 
 if __name__=="__main__":
@@ -149,6 +158,6 @@ if __name__=="__main__":
     input_handler = KeyboardInputHandler(screen)
     input_handler.bind("a", "PRESS", lambda ev: print(f"Pressed A at {ev.event_time}"))
     input_handler.bind("a", "HOLD", lambda ev: print(f"Holding A for {ev.duration}"))
-    input_handler.bind("a", "RELEASE", lambda ev: print(f"Releasing A at {ev.event_time}"))
+    input_handler.bind("a", "RELEASE", lambda ev: print(f"Releasing A at {ev.event_time} after {ev.duration} of hold"))
     input_handler.start_listen()
     screen.exitonclick()
