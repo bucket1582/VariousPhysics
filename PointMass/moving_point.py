@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Callable
+from collections import deque
 
 from Basics.kinematics import PhysicsThread
 from Basics.renderer import RenderObject, RenderThread
@@ -26,6 +27,8 @@ class MovingPoint(RenderObject):
         # 객체가 생성되자마자 알아서 물리 스레드에 자신을 등록 (아주 훌륭한 패턴입니다)
         PhysicsThread.instance().on_physics_frame(self.update)
         RenderThread.instance().subscribe(self)
+        self.delayed_force: deque[tuple[float, float]] = deque()
+        self.delayed_impulse: deque[tuple[float, float]] = deque()
 
     def add_pre_behavior(self, behavior: Callable[['MovingPoint'], None]):
         self.pre_behaviors.append(behavior)
@@ -37,6 +40,12 @@ class MovingPoint(RenderObject):
         self.clear_force()
         for behavior in self.pre_behaviors:
             behavior(self)
+        while self.delayed_force:
+            force_x, force_y = self.delayed_force.popleft()
+            self.exert_force(force_x, force_y)
+        while self.delayed_impulse:
+            impulse_x, impulse_y = self.delayed_impulse.popleft()
+            self.exert_impulse(impulse_x, impulse_y)
 
         old_vx = self.vx
         old_vy = self.vy
@@ -79,9 +88,19 @@ class MovingPoint(RenderObject):
         self.ax = 0
         self.ay = 0
 
+    def exert_impulse(self, impulse_x: float, impulse_y: float):
+        self.vx += impulse_x / self.mass
+        self.vy += impulse_y / self.mass
+
+    def exert_impulse_out_of_sync(self, impulse_x: float, impulse_y: float):
+        self.delayed_impulse.append((impulse_x, impulse_y))
+
     def exert_force(self, force_x: float, force_y: float):
         self.ax += force_x / self.mass
         self.ay += force_y / self.mass
+
+    def exert_force_out_of_sync(self, force_x: float, force_y: float):
+        self.delayed_force.append((force_x, force_y))
 
     def _render(self, pen, env_pen, screen):
         pen.goto(self.x, self.y)

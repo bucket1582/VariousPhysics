@@ -8,10 +8,9 @@ from PointMass.moving_point import MovingPoint
 from PointMass.Fall.generalfalling import *
 
 HORIZONTAL_SPEED = 100
-VERTICAL_SPEED_MAX = 100
-VERTICAL_SPEED_MIN = 0
-CUT_SPEED_RATIO = 0.4
-MAX_HOLD = 1.5
+JUMP_IMPULSE = 20
+JUMP_FORCE = 3000
+MAX_HOLD = 0.5
 
 # Bad practice but...
 started_jump = False
@@ -26,25 +25,20 @@ def horinzontal_loop_dynamics(moving_position: MovingPoint):
             delta = moving_position.x + 100
             moving_position.x = 100 + delta
 
-def reverse_lerp_cut_jump_press(event: KeyPressEvent, moving_position: MovingPoint):
+def constant_force_jump_press(event: KeyPressEvent, moving_position: MovingPoint):
     global started_jump
     if abs(moving_position.y + 100) < 1e-2:
-        moving_position.vy = VERTICAL_SPEED_MIN
+        moving_position.exert_impulse_out_of_sync(0, JUMP_IMPULSE)
+        moving_position.exert_force_out_of_sync(0, JUMP_FORCE)
         started_jump = True
 
-def reverse_lerp_cut_jump(event: KeyHoldEvent, moving_position: MovingPoint):
+def constant_force_jump(event: KeyHoldEvent, moving_position: MovingPoint):
     global started_jump
     if event.duration < MAX_HOLD and started_jump:
-        ratio = event.duration / MAX_HOLD
-        moving_position.vy = VERTICAL_SPEED_MAX * ratio+ VERTICAL_SPEED_MIN * (1 - ratio)
-    elif started_jump:
-        started_jump = False
-        moving_position.vy *= CUT_SPEED_RATIO
+        moving_position.exert_force_out_of_sync(0, JUMP_FORCE)
 
-def reverse_lerp_cut_jump_relesae(event: KeyReleaseEvent, moving_position: MovingPoint):
+def constant_force_jump_release(event: KeyReleaseEvent, moving_position: MovingPoint):
     global started_jump
-    if started_jump:
-        moving_position.vy *= CUT_SPEED_RATIO
     started_jump = False
 
 def naive_right_press(event: KeyPressEvent):
@@ -90,9 +84,9 @@ if __name__ == "__main__":
     key_handler.bind("a", "PRESS", lambda ev: naive_left_press(ev))
     key_handler.bind("a", "HOLD", lambda ev: naive_left_hold(ev, character))
     key_handler.bind("a", "RELEASE", lambda ev: naive_left_release(ev, character))
-    key_handler.bind("space", "PRESS", lambda ev: reverse_lerp_cut_jump_press(ev, character))
-    key_handler.bind("space", "HOLD", lambda ev: reverse_lerp_cut_jump(ev, character))
-    key_handler.bind("space", "RELEASE", lambda ev: reverse_lerp_cut_jump_relesae(ev, character))
+    key_handler.bind("space", "PRESS", lambda ev: constant_force_jump_press(ev, character))
+    key_handler.bind("space", "HOLD", lambda ev: constant_force_jump(ev, character))
+    key_handler.bind("space", "RELEASE", lambda ev: constant_force_jump_release(ev, character))
     key_handler.start_listen()
 
     setup_renderer(FPS, pen, env_pen, screen)
