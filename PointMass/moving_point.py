@@ -29,6 +29,8 @@ class MovingPoint(RenderObject):
         RenderThread.instance().subscribe(self)
         self.delayed_force: deque[tuple[float, float]] = deque()
         self.delayed_impulse: deque[tuple[float, float]] = deque()
+        self.listen_force: bool = True
+        self.listen_impulse: bool = True
 
     def add_pre_behavior(self, behavior: Callable[['MovingPoint'], None]):
         self.pre_behaviors.append(behavior)
@@ -40,9 +42,13 @@ class MovingPoint(RenderObject):
         self.clear_force()
         for behavior in self.pre_behaviors:
             behavior(self)
+        if not self.listen_force:
+            self.delayed_force.clear()
         while self.delayed_force:
             force_x, force_y = self.delayed_force.popleft()
             self.exert_force(force_x, force_y)
+        if not self.listen_impulse:
+            self.delayed_impulse.clear()
         while self.delayed_impulse:
             impulse_x, impulse_y = self.delayed_impulse.popleft()
             self.exert_impulse(impulse_x, impulse_y)
@@ -88,7 +94,12 @@ class MovingPoint(RenderObject):
         self.ax = 0
         self.ay = 0
 
+    def clear_velocity(self):
+        self.vx = 0
+        self.vy = 0
+
     def exert_impulse(self, impulse_x: float, impulse_y: float):
+        if not self.listen_impulse: return
         self.vx += impulse_x / self.mass
         self.vy += impulse_y / self.mass
 
@@ -96,6 +107,7 @@ class MovingPoint(RenderObject):
         self.delayed_impulse.append((impulse_x, impulse_y))
 
     def exert_force(self, force_x: float, force_y: float):
+        if not self.listen_force: return
         self.ax += force_x / self.mass
         self.ay += force_y / self.mass
 
