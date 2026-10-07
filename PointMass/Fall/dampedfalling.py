@@ -35,7 +35,10 @@ env_pen.goto(100, -102.5)
 env_pen.pu()
 
 def falling_dynamics(moving_position: MovingPoint):
-    moving_position.ay = -GRAVITY - DAMP * moving_position.vy
+    moving_position.exert_force(0, -GRAVITY)
+
+def drag_dynamics(moving_position: MovingPoint):
+    moving_position.exert_force(-DAMP * moving_position.vx, -DAMP * moving_position.vy)
 
 def ground_dynamics(moving_position: MovingPoint):
     if moving_position.y < -100:
@@ -43,6 +46,7 @@ def ground_dynamics(moving_position: MovingPoint):
         moving_position.vy = ELASTICITY * (-moving_position.vy)
 
 character.add_pre_behavior(falling_dynamics)
+character.add_pre_behavior(drag_dynamics)
 character.add_post_behavior(ground_dynamics)
 
 def render():

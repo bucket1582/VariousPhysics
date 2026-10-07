@@ -44,7 +44,10 @@ def set_parameters(gravity: float=500, damp: float=2, elasticity: float=0.8):
     ELASTICITY = elasticity
 
 def falling_dynamics(moving_position: MovingPoint):
-    moving_position.ay = -GRAVITY - DAMP * moving_position.vy
+    moving_position.exert_force(0, -GRAVITY)
+
+def drag_dynamics(moving_position: MovingPoint):
+    moving_position.exert_force(-DAMP * moving_position.vx, -DAMP * moving_position.vy)
 
 def ground_dynamics(moving_position: MovingPoint):
     if moving_position.y < -100:
@@ -53,6 +56,7 @@ def ground_dynamics(moving_position: MovingPoint):
 
 def falling_setup(character: MovingPoint):
     character.add_pre_behavior(falling_dynamics)
+    character.add_pre_behavior(drag_dynamics)
     character.add_post_behavior(ground_dynamics)
 
 def render(pen: t.Turtle, env_pen: t.Turtle, character: MovingPoint, screen: t._Screen):

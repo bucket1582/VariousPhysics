@@ -17,6 +17,7 @@ class MovingPoint(RenderObject):
     clamp_vx: float = -1
     clamp_vy: float = -1
     diameter: int = 10
+    mass: int = 1
 
     pre_behaviors: list[Callable[['MovingPoint'], None]] = field(default_factory=list)
     post_behaviors: list[Callable[['MovingPoint'], None]] = field(default_factory=list)
@@ -33,6 +34,7 @@ class MovingPoint(RenderObject):
         self.post_behaviors.append(behavior)
 
     def update(self, delta: float):
+        self.clear_force()
         for behavior in self.pre_behaviors:
             behavior(self)
 
@@ -72,6 +74,14 @@ class MovingPoint(RenderObject):
     @property
     def position(self):
         return (self.x, self.y)
+
+    def clear_force(self):
+        self.ax = 0
+        self.ay = 0
+
+    def exert_force(self, force_x: float, force_y: float):
+        self.ax += force_x / self.mass
+        self.ay += force_y / self.mass
 
     def _render(self, pen, env_pen, screen):
         pen.goto(self.x, self.y)
