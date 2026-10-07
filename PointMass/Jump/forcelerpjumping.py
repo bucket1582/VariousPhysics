@@ -9,9 +9,9 @@ from PointMass.Fall.generalfalling import *
 
 HORIZONTAL_SPEED = 100
 JUMP_IMPULSE = 150
-JUMP_EARLY_FORCE = 2000
-JUMP_LATE_FORCE = 200
-MAX_HOLD = 0.6
+JUMP_EARLY_FORCE = 2500
+JUMP_LATE_FORCE = 400
+MAX_HOLD = 0.8
 
 # Bad practice but...
 started_jump = False
