@@ -8,8 +8,8 @@ from PointMass.moving_point import MovingPoint
 from PointMass.Fall.generalfalling import *
 
 HORIZONTAL_SPEED = 100
-JUMP_IMPULSE = 20
-JUMP_FORCE = 3000
+JUMP_IMPULSE = 100
+JUMP_FORCE = 1000
 MAX_HOLD = 0.5
 
 # Bad practice but...
